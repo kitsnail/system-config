@@ -9,6 +9,7 @@ mv -v /usr/local/prometheus-2.8.0.linux-amd64 /usr/local/prometheus
 cp -vf config/prometheus.yml /usr/local/prometheus/prometheus.yml
 cp -vf systemd/prometheus.service /etc/systemd/system/
 systemctl start prometheus
+systemctl status prometheus
 systemctl enable prometheus
 
 #
@@ -18,21 +19,34 @@ tar xvf /tmp/node_exporter.tar.gz -C /usr/local
 mv -v /usr/local/node_exporter-0.17.0.linux-amd64 /usr/local/node_exporter
 cp -vf systemd/node_exporter.service /etc/systemd/system/
 systemctl start node_exporter
+systemctl status node_exporter
 systemctl enable node_exporter
 
 #
 # install grafana
 wget https://dl.grafana.com/oss/release/grafana-6.0.1-1.x86_64.rpm 
-sudo yum localinstall grafana-6.0.1-1.x86_64.rpm
+sudo yum localinstall grafana-6.0.1-1.x86_64.rpm -y
 grafana-cli plugins install grafana-piechart-panel
 systemctl start grafana-server
 systemctl status grafana-server
 systemctl enable grafana-server.service
 
 #
+# install docker
+
+yum install -y yum-utils \
+  device-mapper-persistent-data \
+  lvm2
+
+yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+
+yum install -y docker-ce docker-ce-cli containerd.io 
+#
 # install shadowsocks
 install_prepare_password(){
-    echo "Please enter password for ${software[${selected}-1]}"
+    echo "Please enter password for shadowsocks"
     read -p "(Default password: teddysun.com):" shadowsockspwd
     [ -z "${shadowsockspwd}" ] && shadowsockspwd="teddysun.com"
     echo
@@ -44,7 +58,7 @@ install_prepare_port() {
     while true
     do
     dport=$(shuf -i 9000-19999 -n 1)
-    echo -e "Please enter a port for ${software[${selected}-1]} [1-65535]"
+    echo -e "Please enter a port for shadowsocks [1-65535]"
     read -p "(Default port: ${dport}):" shadowsocksport
     [ -z "${shadowsocksport}" ] && shadowsocksport=${dport}
     expr ${shadowsocksport} + 1 &>/dev/null
@@ -76,6 +90,7 @@ fi
 
 #
 # setting firewall
+systemctl start firewalld
 default_zone=$(firewall-cmd --get-default-zone)
 firewall-cmd --permanent --zone=${default_zone} --add-port=3000/tcp
 firewall-cmd --permanent --zone=${default_zone} --add-port=${shadowsocksport}/tcp
