@@ -6,7 +6,7 @@
 ## step 1
 
 ```
-git clone https://github.com/snowsnail/system-config.git
+git clone https://github.com/kitsnail/system-config.git
 ```
 
 ## step 2
