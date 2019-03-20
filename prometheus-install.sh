@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# install prometheus, node_exporter, grafana, shadowsocks service
+# install prometheus, node_exporter, grafana, service
 
 
 #
@@ -45,61 +45,6 @@ systemctl status grafana-server
 systemctl enable grafana-server.service
 
 #
-# install docker
-
-yum install -y yum-utils \
-  device-mapper-persistent-data \
-  lvm2
-
-yum-config-manager \
-    --add-repo \
-    https://download.docker.com/linux/centos/docker-ce.repo
-
-yum install -y docker-ce docker-ce-cli containerd.io 
-
-systemctl enable docker
-systemctl start docker
-systemctl status docker
-
-#
-# install shadowsocks
-install_prepare_password(){
-    echo "Please enter password for shadowsocks"
-    read -p "(Default password: teddysun.com):" shadowsockspwd
-    [ -z "${shadowsockspwd}" ] && shadowsockspwd="teddysun.com"
-    echo
-    echo "password = ${shadowsockspwd}"
-    echo
-}
-
-install_prepare_port() {
-    while true
-    do
-    dport=$(shuf -i 9000-19999 -n 1)
-    echo -e "Please enter a port for shadowsocks [1-65535]"
-    read -p "(Default port: ${dport}):" shadowsocksport
-    [ -z "${shadowsocksport}" ] && shadowsocksport=${dport}
-    expr ${shadowsocksport} + 1 &>/dev/null
-    if [ $? -eq 0 ]; then
-        if [ ${shadowsocksport} -ge 1 ] && [ ${shadowsocksport} -le 65535 ] && [ ${shadowsocksport:0:1} != 0 ]; then
-            echo
-            echo "port = ${shadowsocksport}"
-            echo
-            break
-        fi
-    fi
-    echo -e "[${red}Error${plain}] Please enter a correct number [1-65535]"
-    done
-}
-
-install_prepare_password
-install_prepare_port
-
-docker run -dt --name ss \
-   -p ${shadowsocksport}:${shadowsocksport} mritd/shadowsocks \
-   -s "-s 0.0.0.0 -p ${shadowsocksport} -m aes-256-cfb -k ${shadowsockspwd} --fast-open"
-
-#
 # disable selinux
 if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then
     sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
@@ -111,7 +56,5 @@ fi
 systemctl start firewalld
 default_zone=$(firewall-cmd --get-default-zone)
 firewall-cmd --permanent --zone=${default_zone} --add-port=3000/tcp
-firewall-cmd --permanent --zone=${default_zone} --add-port=${shadowsocksport}/tcp
-firewall-cmd --permanent --zone=${default_zone} --add-port=${shadowsocksport}/udp
 firewall-cmd --reload
 
