@@ -63,7 +63,7 @@ chmod +x prometheus-install.sh
 ./prometheus-install.sh
 ```
 
-- import ``
+- grafana settings 
 
    1. login grafana: http://$ip:3000
       user: admin (default)
