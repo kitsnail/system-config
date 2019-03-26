@@ -56,11 +56,24 @@ lsmod | grep bbr
 
 ## step 3
 
+- install prometheus & grafana 
 ```
 cd system-config
-chmod +x setup.sh
+chmod +x prometheus-install.sh
 ./prometheus-install.sh
+```
 
+- import ``
+
+   1. login grafana: http://$ip:3000
+      user: admin (default)
+      passwd: admin (default)
+   2. add `datasource`, select `prometheus`,and set `url` 'http://localhost:9090', click `Save&Test`
+   3. click '+' , 'import',and upload json file 'grafana-template.json'
+
+
+- install shadowsocks
+```
 chmod +x shadowsocks-all.sh
 ./shadowsocks-all.sh 2>&1 | tee shadowsocks-all.log
 ```
